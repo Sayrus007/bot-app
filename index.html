@@ -10,7 +10,7 @@
         body {
             margin: 0; padding: 15px;
             font-family: 'SF Pro Display', -apple-system, sans-serif;
-            background-color: #000000; /* Черный фон как в примере */
+            background-color: #000000; 
             color: #ffffff;
             user-select: none;
         }
@@ -43,7 +43,7 @@
         .btn-circle {
             width: 32px; height: 32px;
             border-radius: 50%; border: none;
-            background: #f5a623; /* Оранжевые кнопки как в примере */
+            background: #f5a623; 
             color: #fff; font-size: 20px; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
@@ -59,9 +59,15 @@
         }
         .status-btn.active { background: #10b981; }
 
+        .pair-btn {
+            flex: 1; padding: 10px; border-radius: 10px; border: none;
+            font-weight: bold; color: white; background: #333; cursor: pointer;
+        }
+        .pair-btn.active { background: #f5a623; }
+
         .main-btn {
             position: fixed; bottom: 20px; left: 20px; right: 20px;
-            background: #34c759; /* Зеленая кнопка подтверждения */
+            background: #34c759; 
             color: white; border: none; padding: 16px;
             border-radius: 14px; font-size: 18px; font-weight: 700;
             width: calc(100% - 40px); cursor: pointer;
@@ -73,7 +79,15 @@
 <body>
 
     <div class="grid">
-        <!-- Настройка Тейк-Профита -->
+        <!-- Выбор пары -->
+        <div class="card status-card">
+            <div class="title">Торговая пара</div>
+            <div style="display: flex; gap: 10px; width: 100%; margin-top: 5px;">
+                <button class="pair-btn active" id="sym-xau" onclick="setSymbol('XAUUSDm')">Золото</button>
+                <button class="pair-btn" id="sym-btc" onclick="setSymbol('BTCUSDm')">Биткоин</button>
+            </div>
+        </div>
+
         <div class="card">
             <div class="icon">🎯</div>
             <div class="title">Take Profit</div>
@@ -84,18 +98,17 @@
             </div>
         </div>
 
-        <!-- Настройка Лота -->
         <div class="card">
             <div class="icon">📦</div>
             <div class="title">Lot Size</div>
-            <div class="value" id="lot-val">0.5</div>
+            <div class="value" id="lot-val">0.50</div>
             <div class="controls">
-                <button class="btn-circle red" onclick="changeValue('lot', -0.1)">-</button>
-                <button class="btn-circle" onclick="changeValue('lot', 0.1)">+</button>
+                <!-- Шаг изменен на 0.01 -->
+                <button class="btn-circle red" onclick="changeValue('lot', -0.01)">-</button>
+                <button class="btn-circle" onclick="changeValue('lot', 0.01)">+</button>
             </div>
         </div>
 
-        <!-- Кнопка Старт/Стоп -->
         <div class="card status-card">
             <div class="title">Состояние бота</div>
             <button class="status-btn" id="bot-status" onclick="toggleBot()">🔴 БОТ ОСТАНОВЛЕН</button>
@@ -106,25 +119,31 @@
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть на весь экран
+        tg.expand();
 
-        // Начальные значения
         let tp = 10.0;
-        let lot = 0.5;
+        let lot = 0.50;
         let isRunning = false;
+        let symbol = 'XAUUSDm';
 
         function haptic() {
-            // Тактильный отклик (вибрация/щелчок) при нажатии
             tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function setSymbol(sym) {
+            haptic();
+            symbol = sym;
+            document.getElementById('sym-xau').className = (sym === 'XAUUSDm') ? 'pair-btn active' : 'pair-btn';
+            document.getElementById('sym-btc').className = (sym === 'BTCUSDm') ? 'pair-btn active' : 'pair-btn';
         }
 
         function changeValue(type, amount) {
             haptic();
             if (type === 'tp') {
-                tp = Math.max(1.0, tp + amount); // Минимум $1
+                tp = Math.max(1.0, tp + amount); 
                 document.getElementById('tp-val').innerText = '$' + tp.toFixed(1);
             } else if (type === 'lot') {
-                lot = Math.max(0.01, lot + amount); // Минимум 0.01 лота
+                lot = Math.max(0.01, lot + amount); 
                 document.getElementById('lot-val').innerText = lot.toFixed(2);
             }
         }
@@ -143,17 +162,14 @@
         }
 
         function sendSettings() {
-            // Сильная вибрация при сохранении
             tg.HapticFeedback.notificationOccurred('success');
-            
-            // Собираем данные в формат JSON и отправляем в Python
             const data = {
                 action: isRunning ? 'start' : 'stop',
                 tp: tp,
-                lot: lot
+                lot: lot,
+                symbol: symbol
             };
             tg.sendData(JSON.stringify(data));
-            
             setTimeout(() => tg.close(), 200);
         }
     </script>
