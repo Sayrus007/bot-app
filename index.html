@@ -184,8 +184,8 @@
         function setSymbol(sym, playHaptic = true) {
             if(playHaptic) haptic();
             symbol = sym;
-            document.getElementById('sym-xau').className = (sym === 'XAUUSD') ? 'pair-btn active' : 'pair-btn';
-            document.getElementById('sym-btc').className = (sym === 'BTCUSD') ? 'pair-btn active' : 'pair-btn';
+            document.getElementById('sym-xau').className = (sym === 'XAUUSDm') ? 'pair-btn active' : 'pair-btn';
+            document.getElementById('sym-btc').className = (sym === 'BTCUSDm') ? 'pair-btn active' : 'pair-btn';
             saveMemory();
         }
 
