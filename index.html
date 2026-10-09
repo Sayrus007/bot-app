@@ -113,8 +113,8 @@
         <div class="card status-card">
             <div class="title">Торговая пара</div>
             <div style="display: flex; gap: 10px; width: 100%; margin-top: 5px;">
-                <button class="pair-btn active" id="sym-xau" onclick="setSymbol('XAUUSD')">Золото</button>
-                <button class="pair-btn" id="sym-btc" onclick="setSymbol('BTCUSD')">Биткоин</button>
+                <button class="pair-btn active" id="sym-xau" onclick="setSymbol('XAUUSDm')">Золото</button>
+                <button class="pair-btn" id="sym-btc" onclick="setSymbol('BTCUSDm')">Биткоин</button>
             </div>
         </div>
 
@@ -158,7 +158,7 @@
         // Загрузка настроек из памяти телефона (или стандартные значения, если открыт впервые)
         let tp = parseFloat(localStorage.getItem('saved_tp')) || 10.0;
         let lot = parseFloat(localStorage.getItem('saved_lot')) || 0.50;
-        let symbol = localStorage.getItem('saved_symbol') || 'XAUUSD';
+        let symbol = localStorage.getItem('saved_symbol') || 'XAUUSDm';
         let isRunning = false;
 
         let pressTimeout;
