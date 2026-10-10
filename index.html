@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AiTradingBot Panel</title>
   
-  <!-- Подключение иконок Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Подключение Telegram Web App API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -37,12 +35,12 @@
       backdrop-filter: blur(30px);
       -webkit-backdrop-filter: blur(30px);
       border-right: 1px solid rgba(255, 255, 255, 0.1);
-      transition: width 0.4s ease;
+      transition: width 0.4s ease, transform 0.4s ease;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       flex-shrink: 0;
-      z-index: 10;
+      z-index: 100;
     }
 
     .header {
@@ -118,12 +116,25 @@
       background: rgba(255, 255, 255, 0.1);
     }
 
-    /* --- Стили для свернутого состояния --- */
+    /* --- Стили для свернутого состояния (Десктоп) --- */
     .panel.collapsed { width: 70px; }
     .panel.collapsed .header { justify-content: center; }
     .panel.collapsed .header h1 { display: none; }
     .panel.collapsed .menu-item { padding: 13px 0; justify-content: center; }
     .panel.collapsed .menu-item span { display: none; }
+
+    /* --- Мобильный оверлей --- */
+    .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 50;
+        backdrop-filter: blur(2px);
+    }
 
     /* --- Контентная часть (Торговый Дашборд) --- */
     .main-content {
@@ -210,19 +221,46 @@
     .buy { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
     .sell { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
-    /* Для мобилок по умолчанию скрываем сайдбар в мини-режим */
+    /* Кнопка открытия меню на мобильных */
+    .mobile-menu-btn {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #38bdf8;
+        color: #000;
+        border: none;
+        font-size: 20px;
+        z-index: 90;
+        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+    }
+
+    /* Мобильная адаптация */
     @media (max-width: 600px) {
-      .panel { width: 70px; }
-      .panel .header h1 { display: none; }
-      .panel .menu-item span { display: none; }
-      .panel .header { justify-content: center; }
-      .panel.open-mobile { width: 260px; position: absolute; }
-      .panel.open-mobile .header h1, .panel.open-mobile .menu-item span { display: block; }
-      .panel.open-mobile .header { justify-content: space-between; }
+      .panel { 
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 260px; 
+          transform: translateX(-100%); /* Скрываем за левым краем */
+      }
+      .panel.open-mobile { 
+          transform: translateX(0); /* Показываем панель */
+      }
+      .mobile-menu-btn { display: block; }
+      .mobile-overlay.active { display: block; }
+      /* Скрываем крестик внутри панели на мобильных, так как есть кнопка и оверлей */
+      .toggle-btn { display: none; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Оверлей для закрытия меню кликом вне панели (только для мобильных) -->
+  <div class="mobile-overlay" id="mobileOverlay"></div>
 
   <!-- БОКОВОЕ МЕНЮ (Sidebar) -->
   <div class="panel collapsed" id="panel">
@@ -234,18 +272,16 @@
     </div>
 
     <div class="menu">
-      <a class="menu-item active">
+      <a class="menu-item active" onclick="closeMobileMenu()">
         <i class="fa-solid fa-chart-line"></i>
         <span>Dashboard</span>
       </a>
       
-      <!-- Обратите внимание на вызов sendCommand -->
       <a class="menu-item start-btn" onclick="sendCommand('start')">
         <i class="fa-solid fa-play"></i>
         <span>Запустить бота</span>
       </a>
       
-      <!-- Обратите внимание на вызов sendCommand -->
       <a class="menu-item stop-btn" onclick="sendCommand('stop')">
         <i class="fa-solid fa-stop"></i>
         <span>Остановить бота</span>
@@ -253,7 +289,7 @@
       
       <div class="divider"></div>
       
-      <a class="menu-item" onclick="tg.showAlert('Для смены счета используйте команду /login в чате с ботом')">
+      <a class="menu-item" onclick="tg.showAlert('Для смены счета используйте команду /login в чате с ботом'); closeMobileMenu();">
         <i class="fa-solid fa-users"></i>
         <span>Смена счета</span>
       </a>
@@ -264,6 +300,11 @@
     </div>
   </div>
 
+  <!-- Кнопка гамбургер для мобильных -->
+  <button class="mobile-menu-btn" id="mobileMenuBtn">
+      <i class="fa-solid fa-bars"></i>
+  </button>
+
   <!-- ОСНОВНОЙ ДАШБОРД -->
   <div class="main-content">
     <div class="status-bar">
@@ -273,25 +314,20 @@
     <!-- Карточка: Золото -->
     <div class="asset-card">
       <div class="asset-title"><i class="fa-solid fa-coins" style="color: #fbbf24;"></i> XAUUSD (Gold)</div>
-      <!-- Добавлен ID xau-price -->
       <div class="asset-data">Текущий тик: <span class="highlight" id="xau-price">0.00</span></div>
-      <!-- Добавлен класс status-indicator-text -->
       <div class="asset-data">Статус: <span class="text-green status-indicator-text">Ожидание...</span></div>
     </div>
 
     <!-- Карточка: Биткоин -->
     <div class="asset-card">
       <div class="asset-title"><i class="fa-brands fa-bitcoin" style="color: #f7931a;"></i> BTCUSD (Bitcoin)</div>
-      <!-- Добавлен ID btc-price -->
       <div class="asset-data">Текущий тик: <span class="highlight" id="btc-price">0.00</span></div>
-      <!-- Добавлен класс status-indicator-text -->
       <div class="asset-data">Статус: <span class="text-green status-indicator-text">Ожидание...</span></div>
     </div>
 
-    <!-- Таблица сделок (Будет заполняться из Python, пока заглушка) -->
+    <!-- Таблица сделок -->
     <h3 class="trades-title">Последние сделки</h3>
     <div id="trades-container">
-        <!-- Сделки появятся здесь -->
         <div style="color: #94a3b8; font-size: 0.9rem;">Ожидание данных...</div>
     </div>
   </div>
@@ -304,39 +340,52 @@
     tg.setHeaderColor('#000000');
     tg.setBackgroundColor('#000000');
 
-    // 2. Логика Sidebar'а (Сворачивание/Разворачивание)
+    // 2. Логика Sidebar'а (Адаптивная)
     const panel = document.getElementById('panel');
-    const toggleBtn = document.getElementById('toggleBtn');
+    const toggleBtn = document.getElementById('toggleBtn'); // Кнопка внутри панели (Десктоп)
     const toggleIcon = document.getElementById('toggleIcon');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn'); // Кнопка снаружи (Мобильные)
+    const mobileOverlay = document.getElementById('mobileOverlay');
 
-    toggleBtn.addEventListener('click', () => {
-      if (window.innerWidth <= 600) {
-        panel.classList.toggle('open-mobile');
-        panel.classList.remove('collapsed');
-      } else {
-        panel.classList.toggle('collapsed');
-      }
-      
-      if (panel.classList.contains('collapsed') && window.innerWidth > 600) {
-        toggleIcon.className = 'fa-solid fa-bars';
-      } else if (!panel.classList.contains('open-mobile') && window.innerWidth <= 600) {
-        toggleIcon.className = 'fa-solid fa-bars';
-      } else {
-        toggleIcon.className = 'fa-solid fa-xmark';
-      }
-    });
+    // Открытие/Сворачивание для Десктопа
+    if(toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          if (window.innerWidth > 600) {
+            panel.classList.toggle('collapsed');
+            toggleIcon.className = panel.classList.contains('collapsed') ? 'fa-solid fa-bars' : 'fa-solid fa-xmark';
+          }
+        });
+    }
 
-    if (window.innerWidth <= 600) {
-      toggleIcon.className = 'fa-solid fa-bars';
+    // Открытие меню для Мобильных
+    if(mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => {
+            panel.classList.add('open-mobile');
+            mobileOverlay.classList.add('active');
+            mobileMenuBtn.style.display = 'none'; // Скрываем кнопку открытия
+        });
+    }
+
+    // Закрытие мобильного меню
+    function closeMobileMenu() {
+        if (window.innerWidth <= 600) {
+            panel.classList.remove('open-mobile');
+            mobileOverlay.classList.remove('active');
+            setTimeout(() => { mobileMenuBtn.style.display = 'block'; }, 400);
+        }
+    }
+
+    // Закрытие по клику на оверлей
+    if(mobileOverlay) {
+        mobileOverlay.addEventListener('click', closeMobileMenu);
     }
 
     // ==========================================
     // 3. WEBSOCKETS (СВЯЗЬ С PYTHON БОТОМ)
     // ==========================================
     
-    // ВНИМАНИЕ: Если тестируете с телефона, замените localhost на IP вашего компьютера (например: 192.168.1.5)
-    // Либо используйте адрес от ngrok, если пробрасываете туннель.
-    const wsUrl = "ws://localhost:8000/ws";
+    // IP адрес Вашего компьютера в локальной сети:
+    const wsUrl = "ws://192.168.100.7:8000/ws";
     
     let ws;
 
@@ -352,23 +401,21 @@
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
             
-            // Обновляем цены (добавляем небольшую анимацию цвета при обновлении)
             const xauEl = document.getElementById('xau-price');
             const btcEl = document.getElementById('btc-price');
             
-            if(xauEl.innerText !== data.xau_price.toFixed(2)) {
+            if(xauEl && xauEl.innerText !== data.xau_price.toFixed(2)) {
                 xauEl.innerText = data.xau_price.toFixed(2);
                 xauEl.style.color = "#ffffff";
                 setTimeout(() => xauEl.style.color = "#38bdf8", 200);
             }
             
-            if(btcEl.innerText !== data.btc_price.toFixed(2)) {
+            if(btcEl && btcEl.innerText !== data.btc_price.toFixed(2)) {
                 btcEl.innerText = data.btc_price.toFixed(2);
                 btcEl.style.color = "#ffffff";
                 setTimeout(() => btcEl.style.color = "#38bdf8", 200);
             }
             
-            // Обновляем статус работы бота
             const statusElements = document.querySelectorAll('.status-indicator-text');
             statusElements.forEach(el => {
                 const isActive = data.status === "ВКЛЮЧЕН";
@@ -376,27 +423,28 @@
                 el.style.color = isActive ? "#22c55e" : "#f87171";
             });
 
-            // Обновляем список сделок
             const tradesContainer = document.getElementById('trades-container');
-            if (data.trades && data.trades.length > 0) {
-                tradesContainer.innerHTML = '';
-                data.trades.forEach(trade => {
-                    const typeClass = trade.type === "BUY" ? "buy" : "sell";
-                    tradesContainer.innerHTML += `
-                        <div class="trade-item">
-                            <div class="trade-info">
-                                <span class="symbol">${trade.symbol}</span>
-                                <span class="type ${typeClass}">${trade.type}</span>
+            if (tradesContainer) {
+                if (data.trades && data.trades.length > 0) {
+                    tradesContainer.innerHTML = '';
+                    data.trades.forEach(trade => {
+                        const typeClass = trade.type === "BUY" ? "buy" : "sell";
+                        tradesContainer.innerHTML += `
+                            <div class="trade-item">
+                                <div class="trade-info">
+                                    <span class="symbol">${trade.symbol}</span>
+                                    <span class="type ${typeClass}">${trade.type}</span>
+                                </div>
+                                <div class="trade-details">
+                                    <span class="price">${trade.price}</span>
+                                    <span class="time">${trade.time}</span>
+                                </div>
                             </div>
-                            <div class="trade-details">
-                                <span class="price">${trade.price}</span>
-                                <span class="time">${trade.time}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                tradesContainer.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">Нет открытых позиций</div>';
+                        `;
+                    });
+                } else {
+                    tradesContainer.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">Нет открытых позиций</div>';
+                }
             }
         };
 
@@ -405,15 +453,13 @@
             document.getElementById('connection-dot').style.background = "#f87171";
             document.getElementById('connection-dot').style.boxShadow = "0 0 10px #f87171";
             
-            // Пытаемся переподключиться через 3 секунды
             setTimeout(connectWebSocket, 3000);
         };
     }
 
-    // Запускаем подключение при старте
     connectWebSocket();
 
-    // Функция отправки команд (Старт / Стоп) в Python-бот
+    // Функция отправки команд
     function sendCommand(actionName) {
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ action: actionName }));
@@ -422,8 +468,12 @@
             } else if (actionName === 'stop') {
                 tg.showAlert('Команда отправлена: Остановка бота 🔴');
             }
+            closeMobileMenu(); // Закрываем меню после нажатия
         } else {
-            tg.showAlert('Ошибка: Нет связи с Python-сервером');
+            // Фолбэк для теста, если сервер не запущен
+            if (actionName === 'start') tg.showAlert('[TEST] Команда: Запуск бота');
+            if (actionName === 'stop') tg.showAlert('[TEST] Команда: Остановка бота');
+            closeMobileMenu();
         }
     }
   </script>
