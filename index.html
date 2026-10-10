@@ -2,7 +2,6 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <!-- Настройка масштаба для мобильных устройств (Telegram Web App) -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AiTradingBot Panel</title>
   
@@ -12,7 +11,6 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    /* ВАШИ СТИЛИ + СТИЛИ ДАШБОРДА */
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
     * {
@@ -30,7 +28,7 @@
       overflow-x: hidden;
     }
 
-    /* --- Основная панель (Глассморфизм из вашего примера) --- */
+    /* --- Основная панель (Глассморфизм) --- */
     .panel {
       width: 260px;
       height: 100vh;
@@ -173,8 +171,8 @@
     }
 
     .asset-data { font-size: 0.9rem; color: #94a3b8; margin-bottom: 4px; }
-    .highlight { color: #38bdf8; font-weight: 600; font-size: 1.1rem; }
-    .text-green { color: #22c55e; }
+    .highlight { color: #38bdf8; font-weight: 600; font-size: 1.1rem; transition: color 0.3s; }
+    .text-green { color: #22c55e; font-weight: 600; transition: color 0.3s; }
 
     .trades-title {
       font-size: 1.2rem;
@@ -240,18 +238,22 @@
         <i class="fa-solid fa-chart-line"></i>
         <span>Dashboard</span>
       </a>
-      <a class="menu-item start-btn" onclick="tg.showAlert('Бот запущен!')">
+      
+      <!-- Обратите внимание на вызов sendCommand -->
+      <a class="menu-item start-btn" onclick="sendCommand('start')">
         <i class="fa-solid fa-play"></i>
         <span>Запустить бота</span>
       </a>
-      <a class="menu-item stop-btn" onclick="tg.showAlert('Бот остановлен!')">
+      
+      <!-- Обратите внимание на вызов sendCommand -->
+      <a class="menu-item stop-btn" onclick="sendCommand('stop')">
         <i class="fa-solid fa-stop"></i>
         <span>Остановить бота</span>
       </a>
       
       <div class="divider"></div>
       
-      <a class="menu-item" onclick="tg.showAlert('Инструкция по смене счета отправлена в чат')">
+      <a class="menu-item" onclick="tg.showAlert('Для смены счета используйте команду /login в чате с ботом')">
         <i class="fa-solid fa-users"></i>
         <span>Смена счета</span>
       </a>
@@ -265,49 +267,36 @@
   <!-- ОСНОВНОЙ ДАШБОРД -->
   <div class="main-content">
     <div class="status-bar">
-      <span class="dot"></span> Система онлайн
+      <span class="dot" id="connection-dot"></span> <span id="connection-text">Подключение...</span>
     </div>
 
-    <!-- Карточки активов -->
+    <!-- Карточка: Золото -->
     <div class="asset-card">
       <div class="asset-title"><i class="fa-solid fa-coins" style="color: #fbbf24;"></i> XAUUSD (Gold)</div>
-      <div class="asset-data">Текущий тик: <span class="highlight">2645.50</span></div>
-      <div class="asset-data">Статус: <span class="text-green">В работе</span></div>
+      <!-- Добавлен ID xau-price -->
+      <div class="asset-data">Текущий тик: <span class="highlight" id="xau-price">0.00</span></div>
+      <!-- Добавлен класс status-indicator-text -->
+      <div class="asset-data">Статус: <span class="text-green status-indicator-text">Ожидание...</span></div>
     </div>
 
+    <!-- Карточка: Биткоин -->
     <div class="asset-card">
       <div class="asset-title"><i class="fa-brands fa-bitcoin" style="color: #f7931a;"></i> BTCUSD (Bitcoin)</div>
-      <div class="asset-data">Текущий тик: <span class="highlight">63405.17</span></div>
-      <div class="asset-data">Статус: <span class="text-green">В работе</span></div>
+      <!-- Добавлен ID btc-price -->
+      <div class="asset-data">Текущий тик: <span class="highlight" id="btc-price">0.00</span></div>
+      <!-- Добавлен класс status-indicator-text -->
+      <div class="asset-data">Статус: <span class="text-green status-indicator-text">Ожидание...</span></div>
     </div>
 
-    <!-- Таблица сделок -->
-    <h3 class="trades-title">Открытые сделки</h3>
-    
-    <div class="trade-item">
-      <div class="trade-info">
-        <span class="symbol">XAUUSD</span>
-        <span class="type buy">BUY</span>
-      </div>
-      <div class="trade-details">
-        <span class="price">2640.10</span>
-        <span class="time">17:35:12</span>
-      </div>
-    </div>
-    
-    <div class="trade-item">
-      <div class="trade-info">
-        <span class="symbol">BTCUSD</span>
-        <span class="type sell">SELL</span>
-      </div>
-      <div class="trade-details">
-        <span class="price">63500.00</span>
-        <span class="time">17:40:05</span>
-      </div>
+    <!-- Таблица сделок (Будет заполняться из Python, пока заглушка) -->
+    <h3 class="trades-title">Последние сделки</h3>
+    <div id="trades-container">
+        <!-- Сделки появятся здесь -->
+        <div style="color: #94a3b8; font-size: 0.9rem;">Ожидание данных...</div>
     </div>
   </div>
 
-  <!-- СКРИПТЫ ВЗАИМОДЕЙСТВИЯ -->
+  <!-- СКРИПТЫ -->
   <script>
     // 1. Настройка Telegram Web App
     let tg = window.Telegram.WebApp;
@@ -315,13 +304,12 @@
     tg.setHeaderColor('#000000');
     tg.setBackgroundColor('#000000');
 
-    // 2. Логика вашего Sidebar'а (Сворачивание/Разворачивание)
+    // 2. Логика Sidebar'а (Сворачивание/Разворачивание)
     const panel = document.getElementById('panel');
     const toggleBtn = document.getElementById('toggleBtn');
     const toggleIcon = document.getElementById('toggleIcon');
 
     toggleBtn.addEventListener('click', () => {
-      // Для мобилок используем спец. класс
       if (window.innerWidth <= 600) {
         panel.classList.toggle('open-mobile');
         panel.classList.remove('collapsed');
@@ -329,7 +317,6 @@
         panel.classList.toggle('collapsed');
       }
       
-      // Смена иконки
       if (panel.classList.contains('collapsed') && window.innerWidth > 600) {
         toggleIcon.className = 'fa-solid fa-bars';
       } else if (!panel.classList.contains('open-mobile') && window.innerWidth <= 600) {
@@ -339,9 +326,105 @@
       }
     });
 
-    // На старте для мобилок ставим иконку гамбургера
     if (window.innerWidth <= 600) {
       toggleIcon.className = 'fa-solid fa-bars';
+    }
+
+    // ==========================================
+    // 3. WEBSOCKETS (СВЯЗЬ С PYTHON БОТОМ)
+    // ==========================================
+    
+    // ВНИМАНИЕ: Если тестируете с телефона, замените localhost на IP вашего компьютера (например: 192.168.1.5)
+    // Либо используйте адрес от ngrok, если пробрасываете туннель.
+    const wsUrl = "ws://localhost:8000/ws";
+    
+    let ws;
+
+    function connectWebSocket() {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = function() {
+            document.getElementById('connection-text').innerText = "Система онлайн (Подключено)";
+            document.getElementById('connection-dot').style.background = "#22c55e";
+            document.getElementById('connection-dot').style.boxShadow = "0 0 10px #22c55e";
+        };
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            // Обновляем цены (добавляем небольшую анимацию цвета при обновлении)
+            const xauEl = document.getElementById('xau-price');
+            const btcEl = document.getElementById('btc-price');
+            
+            if(xauEl.innerText !== data.xau_price.toFixed(2)) {
+                xauEl.innerText = data.xau_price.toFixed(2);
+                xauEl.style.color = "#ffffff";
+                setTimeout(() => xauEl.style.color = "#38bdf8", 200);
+            }
+            
+            if(btcEl.innerText !== data.btc_price.toFixed(2)) {
+                btcEl.innerText = data.btc_price.toFixed(2);
+                btcEl.style.color = "#ffffff";
+                setTimeout(() => btcEl.style.color = "#38bdf8", 200);
+            }
+            
+            // Обновляем статус работы бота
+            const statusElements = document.querySelectorAll('.status-indicator-text');
+            statusElements.forEach(el => {
+                const isActive = data.status === "ВКЛЮЧЕН";
+                el.innerText = isActive ? "В работе" : "Остановлен";
+                el.style.color = isActive ? "#22c55e" : "#f87171";
+            });
+
+            // Обновляем список сделок
+            const tradesContainer = document.getElementById('trades-container');
+            if (data.trades && data.trades.length > 0) {
+                tradesContainer.innerHTML = '';
+                data.trades.forEach(trade => {
+                    const typeClass = trade.type === "BUY" ? "buy" : "sell";
+                    tradesContainer.innerHTML += `
+                        <div class="trade-item">
+                            <div class="trade-info">
+                                <span class="symbol">${trade.symbol}</span>
+                                <span class="type ${typeClass}">${trade.type}</span>
+                            </div>
+                            <div class="trade-details">
+                                <span class="price">${trade.price}</span>
+                                <span class="time">${trade.time}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                tradesContainer.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">Нет открытых позиций</div>';
+            }
+        };
+
+        ws.onclose = function() {
+            document.getElementById('connection-text').innerText = "Связь потеряна. Переподключение...";
+            document.getElementById('connection-dot').style.background = "#f87171";
+            document.getElementById('connection-dot').style.boxShadow = "0 0 10px #f87171";
+            
+            // Пытаемся переподключиться через 3 секунды
+            setTimeout(connectWebSocket, 3000);
+        };
+    }
+
+    // Запускаем подключение при старте
+    connectWebSocket();
+
+    // Функция отправки команд (Старт / Стоп) в Python-бот
+    function sendCommand(actionName) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ action: actionName }));
+            if (actionName === 'start') {
+                tg.showAlert('Команда отправлена: Запуск бота 🟢');
+            } else if (actionName === 'stop') {
+                tg.showAlert('Команда отправлена: Остановка бота 🔴');
+            }
+        } else {
+            tg.showAlert('Ошибка: Нет связи с Python-сервером');
+        }
     }
   </script>
 </body>
