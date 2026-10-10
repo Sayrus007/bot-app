@@ -11,387 +11,124 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { min-height: 100vh; display: flex; background: #000; color: #fff; overflow-x: hidden; }
 
-    body {
-      min-height: 100vh;
-      display: flex;
-      background: #000;
-      color: #fff;
-      overflow-x: hidden;
-    }
-
-    /* --- Основная панель (Глассморфизм) --- */
-    .panel {
-      width: 260px;
-      height: 100vh;
-      padding: 20px 15px;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
-      transition: width 0.4s ease, transform 0.4s ease;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      flex-shrink: 0;
-      z-index: 100;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 25px;
-      transition: 0.4s;
-    }
-
-    .header h1 {
-      font-size: 1.2rem;
-      font-weight: 600;
-      white-space: nowrap;
-      color: #38bdf8;
-    }
-
-    .toggle-btn {
-      width: 40px;
-      height: 40px;
-      min-width: 40px;
-      border: 0;
-      border-radius: 50%;
-      color: #fff;
-      background: transparent;
-      font-size: 18px;
-      cursor: pointer;
-      transition: 0.3s;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .toggle-btn:hover { background: rgba(255, 255, 255, 0.12); }
-
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .menu-item {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 13px 15px;
-      border-radius: 12px;
-      text-decoration: none;
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 0.95rem;
-      transition: 0.25s;
-      white-space: nowrap;
-      cursor: pointer;
-    }
-
-    .menu-item:hover, .menu-item.active {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
-
-    .menu-item i {
-      font-size: 1.1rem;
-      min-width: 20px;
-      text-align: center;
-    }
-
-    .menu-item.start-btn { color: #4ade80; }
-    .menu-item.stop-btn { color: #f87171; }
-
-    .divider {
-      height: 1px;
-      margin: 10px 0;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    /* --- Стили для свернутого состояния (Десктоп) --- */
-    .panel.collapsed { width: 70px; }
-    .panel.collapsed .header { justify-content: center; }
-    .panel.collapsed .header h1 { display: none; }
-    .panel.collapsed .menu-item { padding: 13px 0; justify-content: center; }
-    .panel.collapsed .menu-item span { display: none; }
-
-    /* --- Мобильный оверлей --- */
-    .mobile-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 50;
-        backdrop-filter: blur(2px);
-    }
-
-    /* --- Контентная часть (Торговый Дашборд) --- */
-    .main-content {
-      flex-grow: 1;
-      padding: 20px;
-      height: 100vh;
-      overflow-y: auto;
-      background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent 40%);
-    }
-
-    .status-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 25px;
-      font-size: 0.9rem;
-      color: #94a3b8;
-    }
+    /* Панель меню */
+    .panel { width: 260px; height: 100vh; padding: 20px 15px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(30px); border-right: 1px solid rgba(255, 255, 255, 0.1); transition: 0.4s ease; display: flex; flex-direction: column; flex-shrink: 0; z-index: 100; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
+    .header h1 { font-size: 1.2rem; font-weight: 600; color: #38bdf8; }
+    .toggle-btn { width: 40px; height: 40px; border: 0; border-radius: 50%; color: #fff; background: transparent; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    .menu { display: flex; flex-direction: column; gap: 5px; }
+    .menu-item { display: flex; align-items: center; gap: 16px; padding: 13px 15px; border-radius: 12px; color: rgba(255, 255, 255, 0.8); font-size: 0.95rem; cursor: pointer; }
+    .menu-item:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .menu-item i { font-size: 1.1rem; min-width: 20px; text-align: center; }
+    .start-btn { color: #4ade80; } .stop-btn { color: #f87171; }
+    .divider { height: 1px; margin: 10px 0; background: rgba(255, 255, 255, 0.1); }
     
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #22c55e;
-      box-shadow: 0 0 10px #22c55e;
-    }
+    .panel.collapsed { width: 70px; }
+    .panel.collapsed .header h1, .panel.collapsed .menu-item span { display: none; }
+    .mobile-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 50; }
 
-    .asset-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 15px;
-      backdrop-filter: blur(10px);
-    }
-
-    .asset-title {
-      font-weight: 500;
-      font-size: 1.1rem;
-      margin-bottom: 8px;
-      color: #e2e8f0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
+    /* Дашборд */
+    .main-content { flex-grow: 1; padding: 20px; height: 100vh; overflow-y: auto; background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent 40%); }
+    .status-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 0.9rem; color: #94a3b8; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+    .asset-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+    .asset-title { font-weight: 500; font-size: 1.1rem; margin-bottom: 8px; display: flex; gap: 10px; }
     .asset-data { font-size: 0.9rem; color: #94a3b8; margin-bottom: 4px; }
-    .highlight { color: #38bdf8; font-weight: 600; font-size: 1.1rem; transition: color 0.3s; }
-    .text-green { color: #22c55e; font-weight: 600; transition: color 0.3s; }
-
-    .trades-title {
-      font-size: 1.2rem;
-      margin: 25px 0 15px 0;
-      color: #e2e8f0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 5px;
-    }
-
-    .trade-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 12px 15px;
-      border-radius: 10px;
-      border-left: 3px solid #38bdf8;
-      margin-bottom: 10px;
-    }
-
+    .highlight { color: #38bdf8; font-weight: 600; font-size: 1.1rem; }
+    
+    .trades-title { font-size: 1.2rem; margin: 25px 0 15px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px; }
+    .trade-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.03); padding: 12px 15px; border-radius: 10px; border-left: 3px solid #38bdf8; margin-bottom: 10px; }
     .trade-info, .trade-details { display: flex; flex-direction: column; gap: 5px; }
     .trade-details { text-align: right; }
     .symbol { font-weight: 600; font-size: 0.95rem; }
-    .price { font-weight: 600; color: #f8fafc; font-size: 0.95rem; }
     .time { font-size: 0.8rem; color: #94a3b8; }
-    
-    .type {
-      font-size: 0.75rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: 600;
-      display: inline-block;
-      width: fit-content;
-    }
+    .type { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; width: fit-content; }
     .buy { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
     .sell { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .closed { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
 
-    /* Кнопка открытия меню на мобильных */
-    .mobile-menu-btn {
-        display: none;
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: #38bdf8;
-        color: #000;
-        border: none;
-        font-size: 20px;
-        z-index: 90;
-        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
-    }
+    .mobile-menu-btn { display: none; position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: #38bdf8; color: #000; border: none; font-size: 20px; z-index: 90; }
 
-    /* Мобильная адаптация */
     @media (max-width: 600px) {
-      .panel { 
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 260px; 
-          transform: translateX(-100%); /* Скрываем за левым краем */
-      }
-      .panel.open-mobile { 
-          transform: translateX(0); /* Показываем панель */
-      }
+      .panel { position: fixed; width: 260px; transform: translateX(-100%); }
+      .panel.open-mobile { transform: translateX(0); }
       .mobile-menu-btn { display: block; }
       .mobile-overlay.active { display: block; }
-      /* Скрываем крестик внутри панели на мобильных, так как есть кнопка и оверлей */
-      .toggle-btn { display: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Оверлей для закрытия меню кликом вне панели (только для мобильных) -->
   <div class="mobile-overlay" id="mobileOverlay"></div>
 
-  <!-- БОКОВОЕ МЕНЮ (Sidebar) -->
   <div class="panel collapsed" id="panel">
     <div class="header">
       <h1>Bot Panel</h1>
-      <button class="toggle-btn" id="toggleBtn">
-        <i class="fa-solid fa-bars" id="toggleIcon"></i>
-      </button>
+      <button class="toggle-btn" id="toggleBtn"><i class="fa-solid fa-bars" id="toggleIcon"></i></button>
     </div>
-
     <div class="menu">
-      <a class="menu-item active" onclick="closeMobileMenu()">
-        <i class="fa-solid fa-chart-line"></i>
-        <span>Dashboard</span>
-      </a>
-      
-      <a class="menu-item start-btn" onclick="sendCommand('start')">
-        <i class="fa-solid fa-play"></i>
-        <span>Запустить бота</span>
-      </a>
-      
-      <a class="menu-item stop-btn" onclick="sendCommand('stop')">
-        <i class="fa-solid fa-stop"></i>
-        <span>Остановить бота</span>
-      </a>
-      
+      <a class="menu-item active" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+      <a class="menu-item start-btn" onclick="sendCommand('start')"><i class="fa-solid fa-play"></i><span>Запустить бота</span></a>
+      <a class="menu-item stop-btn" onclick="sendCommand('stop')"><i class="fa-solid fa-stop"></i><span>Остановить бота</span></a>
       <div class="divider"></div>
-      
-      <a class="menu-item" onclick="tg.showAlert('Для смены счета используйте команду /login в чате с ботом'); closeMobileMenu();">
-        <i class="fa-solid fa-users"></i>
-        <span>Смена счета</span>
-      </a>
-      <a class="menu-item" onclick="tg.close()">
-        <i class="fa-solid fa-xmark"></i>
-        <span>Закрыть панель</span>
-      </a>
+      <a class="menu-item" onclick="tg.close()"><i class="fa-solid fa-xmark"></i><span>Закрыть панель</span></a>
     </div>
   </div>
 
-  <!-- Кнопка гамбургер для мобильных -->
-  <button class="mobile-menu-btn" id="mobileMenuBtn">
-      <i class="fa-solid fa-bars"></i>
-  </button>
+  <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></button>
 
-  <!-- ОСНОВНОЙ ДАШБОРД -->
   <div class="main-content">
-    <div class="status-bar">
-      <span class="dot" id="connection-dot"></span> <span id="connection-text">Подключение...</span>
-    </div>
+    <div class="status-bar"><span class="dot" id="connection-dot"></span> <span id="connection-text">Подключение...</span></div>
 
-    <!-- Карточка: Золото -->
+    <!-- Графики -->
     <div class="asset-card">
       <div class="asset-title"><i class="fa-solid fa-coins" style="color: #fbbf24;"></i> XAUUSD (Gold)</div>
       <div class="asset-data">Текущий тик: <span class="highlight" id="xau-price">0.00</span></div>
-      <div class="asset-data">Статус: <span class="text-green status-indicator-text">Ожидание...</span></div>
+      <div class="asset-data">Статус: <span class="status-indicator-text">Ожидание...</span></div>
     </div>
-
-    <!-- Карточка: Биткоин -->
     <div class="asset-card">
       <div class="asset-title"><i class="fa-brands fa-bitcoin" style="color: #f7931a;"></i> BTCUSD (Bitcoin)</div>
       <div class="asset-data">Текущий тик: <span class="highlight" id="btc-price">0.00</span></div>
-      <div class="asset-data">Статус: <span class="text-green status-indicator-text">Ожидание...</span></div>
+      <div class="asset-data">Статус: <span class="status-indicator-text">Ожидание...</span></div>
     </div>
 
-    <!-- Таблица сделок -->
-    <h3 class="trades-title">Последние сделки</h3>
-    <div id="trades-container">
-        <div style="color: #94a3b8; font-size: 0.9rem;">Ожидание данных...</div>
+    <!-- Открытые позиции (Реальное время) -->
+    <h3 class="trades-title">Открытые позиции (Живой PNL)</h3>
+    <div id="open-trades-container">
+        <div style="color: #94a3b8; font-size: 0.9rem;">Нет открытых позиций</div>
+    </div>
+
+    <!-- История сделок -->
+    <h3 class="trades-title">История сделок (Сегодня)</h3>
+    <div id="history-container">
+        <div style="color: #94a3b8; font-size: 0.9rem;">История пуста</div>
     </div>
   </div>
 
-  <!-- СКРИПТЫ -->
   <script>
-    // 1. Настройка Telegram Web App
     let tg = window.Telegram.WebApp;
     tg.expand();
     tg.setHeaderColor('#000000');
     tg.setBackgroundColor('#000000');
 
-    // 2. Логика Sidebar'а (Адаптивная)
-    const panel = document.getElementById('panel');
-    const toggleBtn = document.getElementById('toggleBtn'); // Кнопка внутри панели (Десктоп)
-    const toggleIcon = document.getElementById('toggleIcon');
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn'); // Кнопка снаружи (Мобильные)
-    const mobileOverlay = document.getElementById('mobileOverlay');
-
-    // Открытие/Сворачивание для Десктопа
-    if(toggleBtn) {
-        toggleBtn.addEventListener('click', () => {
-          if (window.innerWidth > 600) {
-            panel.classList.toggle('collapsed');
-            toggleIcon.className = panel.classList.contains('collapsed') ? 'fa-solid fa-bars' : 'fa-solid fa-xmark';
-          }
-        });
-    }
-
-    // Открытие меню для Мобильных
-    if(mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', () => {
-            panel.classList.add('open-mobile');
-            mobileOverlay.classList.add('active');
-            mobileMenuBtn.style.display = 'none'; // Скрываем кнопку открытия
-        });
-    }
-
-    // Закрытие мобильного меню
-    function closeMobileMenu() {
-        if (window.innerWidth <= 600) {
-            panel.classList.remove('open-mobile');
-            mobileOverlay.classList.remove('active');
-            setTimeout(() => { mobileMenuBtn.style.display = 'block'; }, 400);
-        }
-    }
-
-    // Закрытие по клику на оверлей
-    if(mobileOverlay) {
-        mobileOverlay.addEventListener('click', closeMobileMenu);
-    }
+    // UI Логика
+    const panel = document.getElementById('panel'), toggleBtn = document.getElementById('toggleBtn'), toggleIcon = document.getElementById('toggleIcon'), mobileMenuBtn = document.getElementById('mobileMenuBtn'), mobileOverlay = document.getElementById('mobileOverlay');
+    if(toggleBtn) toggleBtn.addEventListener('click', () => { if (window.innerWidth > 600) { panel.classList.toggle('collapsed'); toggleIcon.className = panel.classList.contains('collapsed') ? 'fa-solid fa-bars' : 'fa-solid fa-xmark'; } });
+    if(mobileMenuBtn) mobileMenuBtn.addEventListener('click', () => { panel.classList.add('open-mobile'); mobileOverlay.classList.add('active'); mobileMenuBtn.style.display = 'none'; });
+    function closeMobileMenu() { if (window.innerWidth <= 600) { panel.classList.remove('open-mobile'); mobileOverlay.classList.remove('active'); setTimeout(() => { mobileMenuBtn.style.display = 'block'; }, 400); } }
+    if(mobileOverlay) mobileOverlay.addEventListener('click', closeMobileMenu);
 
     // ==========================================
-    // 3. WEBSOCKETS (СВЯЗЬ С PYTHON БОТОМ)
-    // ==========================================
-    
-    // IP адрес Вашего компьютера в локальной сети:
+    // ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ NGROK (ОБЯЗАТЕЛЬНО С WSS://)
     const wsUrl = "wss://esteemed-maturing-juice.ngrok-free.dev/ws";
+    // ==========================================
     
     let ws;
-
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
-
         ws.onopen = function() {
             document.getElementById('connection-text').innerText = "Система онлайн (Подключено)";
             document.getElementById('connection-dot').style.background = "#22c55e";
@@ -401,78 +138,78 @@
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
             
-            const xauEl = document.getElementById('xau-price');
-            const btcEl = document.getElementById('btc-price');
+            // Тики
+            if(document.getElementById('xau-price').innerText !== data.xau_price.toFixed(2)) document.getElementById('xau-price').innerText = data.xau_price.toFixed(2);
+            if(document.getElementById('btc-price').innerText !== data.btc_price.toFixed(2)) document.getElementById('btc-price').innerText = data.btc_price.toFixed(2);
             
-            if(xauEl && xauEl.innerText !== data.xau_price.toFixed(2)) {
-                xauEl.innerText = data.xau_price.toFixed(2);
-                xauEl.style.color = "#ffffff";
-                setTimeout(() => xauEl.style.color = "#38bdf8", 200);
-            }
-            
-            if(btcEl && btcEl.innerText !== data.btc_price.toFixed(2)) {
-                btcEl.innerText = data.btc_price.toFixed(2);
-                btcEl.style.color = "#ffffff";
-                setTimeout(() => btcEl.style.color = "#38bdf8", 200);
-            }
-            
-            const statusElements = document.querySelectorAll('.status-indicator-text');
-            statusElements.forEach(el => {
+            // Статус
+            document.querySelectorAll('.status-indicator-text').forEach(el => {
                 const isActive = data.status === "ВКЛЮЧЕН";
                 el.innerText = isActive ? "В работе" : "Остановлен";
                 el.style.color = isActive ? "#22c55e" : "#f87171";
             });
 
-            const tradesContainer = document.getElementById('trades-container');
-            if (tradesContainer) {
-                if (data.trades && data.trades.length > 0) {
-                    tradesContainer.innerHTML = '';
-                    data.trades.forEach(trade => {
-                        const typeClass = trade.type === "BUY" ? "buy" : "sell";
-                        tradesContainer.innerHTML += `
-                            <div class="trade-item">
-                                <div class="trade-info">
-                                    <span class="symbol">${trade.symbol}</span>
-                                    <span class="type ${typeClass}">${trade.type}</span>
-                                </div>
-                                <div class="trade-details">
-                                    <span class="price">${trade.price}</span>
-                                    <span class="time">${trade.time}</span>
-                                </div>
+            // 1. ОТКРЫТЫЕ ПОЗИЦИИ
+            const openTradesContainer = document.getElementById('open-trades-container');
+            if (data.open_trades && data.open_trades.length > 0) {
+                openTradesContainer.innerHTML = '';
+                data.open_trades.forEach(trade => {
+                    const typeClass = trade.type === "BUY" ? "buy" : "sell";
+                    const profitColor = trade.profit >= 0 ? "#4ade80" : "#f87171";
+                    const profitSign = trade.profit > 0 ? "+" : "";
+                    openTradesContainer.innerHTML += `
+                        <div class="trade-item">
+                            <div class="trade-info">
+                                <span class="symbol">${trade.symbol}</span>
+                                <span class="type ${typeClass}">${trade.type}</span>
                             </div>
-                        `;
-                    });
-                } else {
-                    tradesContainer.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">Нет открытых позиций</div>';
-                }
+                            <div class="trade-details">
+                                <span style="color: ${profitColor}; font-size: 1.1rem; font-weight: 600;">${profitSign}${trade.profit.toFixed(2)}$</span>
+                                <span class="time">Откр: ${trade.price}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                openTradesContainer.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">Нет открытых позиций</div>';
+            }
+
+            // 2. ИСТОРИЯ СДЕЛОК
+            const historyContainer = document.getElementById('history-container');
+            if (data.history_trades && data.history_trades.length > 0) {
+                historyContainer.innerHTML = '';
+                data.history_trades.forEach(trade => {
+                    const profitColor = trade.profit >= 0 ? "#4ade80" : "#f87171";
+                    const profitSign = trade.profit > 0 ? "+" : "";
+                    historyContainer.innerHTML += `
+                        <div class="trade-item" style="border-left: 3px solid #64748b; opacity: 0.8;">
+                            <div class="trade-info">
+                                <span class="symbol">${trade.symbol}</span>
+                                <span class="type closed">Закрыто</span>
+                            </div>
+                            <div class="trade-details">
+                                <span style="color: ${profitColor}; font-weight: 600;">${profitSign}${trade.profit.toFixed(2)}$</span>
+                                <span class="time">${trade.time}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                historyContainer.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">История пуста</div>';
             }
         };
 
         ws.onclose = function() {
             document.getElementById('connection-text').innerText = "Связь потеряна. Переподключение...";
             document.getElementById('connection-dot').style.background = "#f87171";
-            document.getElementById('connection-dot').style.boxShadow = "0 0 10px #f87171";
-            
             setTimeout(connectWebSocket, 3000);
         };
     }
-
     connectWebSocket();
 
-    // Функция отправки команд
     function sendCommand(actionName) {
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ action: actionName }));
-            if (actionName === 'start') {
-                tg.showAlert('Команда отправлена: Запуск бота 🟢');
-            } else if (actionName === 'stop') {
-                tg.showAlert('Команда отправлена: Остановка бота 🔴');
-            }
-            closeMobileMenu(); // Закрываем меню после нажатия
-        } else {
-            // Фолбэк для теста, если сервер не запущен
-            if (actionName === 'start') tg.showAlert('[TEST] Команда: Запуск бота');
-            if (actionName === 'stop') tg.showAlert('[TEST] Команда: Остановка бота');
             closeMobileMenu();
         }
     }
