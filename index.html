@@ -2,10 +2,177 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Trading Dashboard</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background: #0f172a;
+            color: #fff;
+            padding: 20px;
+        }
+
+        /* Glassmorphism Panel */
+        .panel {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
+
+        .assets-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .asset-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .asset-title {
+            font-weight: 500;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+        }
+
+        .asset-data {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .highlight {
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        .text-green {
+            color: #22c55e;
+        }
+
+        .trades-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #e2e8f0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+
+        .trades-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .trade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px 15px;
+            border-radius: 10px;
+            border-left: 3px solid #38bdf8;
+        }
+
+        .trade-info, .trade-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .trade-details {
+            text-align: right;
+        }
+
+        .symbol { font-weight: 600; font-size: 0.95rem; }
+        .price { font-weight: 600; color: #f8fafc; font-size: 0.95rem; }
+        .time { font-size: 0.8rem; color: #94a3b8; }
+
+        .type {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .buy { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .sell { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        .main-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #38bdf8;
+            color: #0f172a;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .main-btn:active {
+            transform: scale(0.98);
+        }
+    </style>
 </head>
 <body>
     <div class="panel">
@@ -20,14 +187,14 @@
             <!-- Золото -->
             <div class="asset-card">
                 <div class="asset-title">🏅 XAUUSD (Gold)</div>
-                <div class="asset-data">Тик: <span class="highlight">2645.50</span></div>
+                <div class="asset-data">Текущий тик: <span class="highlight">2645.50</span></div>
                 <div class="asset-data">Статус: <span class="status-text text-green">В работе</span></div>
             </div>
 
             <!-- Биткоин -->
             <div class="asset-card">
                 <div class="asset-title">₿ BTCUSD (Bitcoin)</div>
-                <div class="asset-data">Тик: <span class="highlight">63405.17</span></div>
+                <div class="asset-data">Текущий тик: <span class="highlight">63405.17</span></div>
                 <div class="asset-data">Статус: <span class="status-text text-green">В работе</span></div>
             </div>
         </div>
@@ -60,6 +227,18 @@
         <button class="main-btn" onclick="closeApp()">Закрыть панель</button>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Инициализация Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Открыть на весь экран
+
+        // Устанавливаем цвета окна Telegram под темный дизайн
+        tg.setHeaderColor('#0f172a');
+        tg.setBackgroundColor('#0f172a');
+
+        function closeApp() {
+            tg.close();
+        }
+    </script>
 </body>
 </html>
