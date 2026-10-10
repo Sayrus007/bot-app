@@ -1,244 +1,348 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Trading Dashboard</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="UTF-8">
+  <!-- Настройка масштаба для мобильных устройств (Telegram Web App) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AiTradingBot Panel</title>
+  
+  <!-- Подключение иконок Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Подключение Telegram Web App API -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    /* ВАШИ СТИЛИ + СТИЛИ ДАШБОРДА */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      background: #000;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* --- Основная панель (Глассморфизм из вашего примера) --- */
+    .panel {
+      width: 260px;
+      height: 100vh;
+      padding: 20px 15px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      transition: width 0.4s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 25px;
+      transition: 0.4s;
+    }
+
+    .header h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      white-space: nowrap;
+      color: #38bdf8;
+    }
+
+    .toggle-btn {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      border: 0;
+      border-radius: 50%;
+      color: #fff;
+      background: transparent;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .toggle-btn:hover { background: rgba(255, 255, 255, 0.12); }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 13px 15px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.95rem;
+      transition: 0.25s;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .menu-item:hover, .menu-item.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .menu-item i {
+      font-size: 1.1rem;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .menu-item.start-btn { color: #4ade80; }
+    .menu-item.stop-btn { color: #f87171; }
+
+    .divider {
+      height: 1px;
+      margin: 10px 0;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- Стили для свернутого состояния --- */
+    .panel.collapsed { width: 70px; }
+    .panel.collapsed .header { justify-content: center; }
+    .panel.collapsed .header h1 { display: none; }
+    .panel.collapsed .menu-item { padding: 13px 0; justify-content: center; }
+    .panel.collapsed .menu-item span { display: none; }
+
+    /* --- Контентная часть (Торговый Дашборд) --- */
+    .main-content {
+      flex-grow: 1;
+      padding: 20px;
+      height: 100vh;
+      overflow-y: auto;
+      background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent 40%);
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 25px;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
     
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+    .asset-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      backdrop-filter: blur(10px);
+    }
 
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            background: #0f172a;
-            color: #fff;
-            padding: 20px;
-        }
+    .asset-title {
+      font-weight: 500;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-        /* Glassmorphism Panel */
-        .panel {
-            width: 100%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 25px;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            margin-top: 20px;
-        }
+    .asset-data { font-size: 0.9rem; color: #94a3b8; margin-bottom: 4px; }
+    .highlight { color: #38bdf8; font-weight: 600; font-size: 1.1rem; }
+    .text-green { color: #22c55e; }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
+    .trades-title {
+      font-size: 1.2rem;
+      margin: 25px 0 15px 0;
+      color: #e2e8f0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 5px;
+    }
 
-        .header h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
+    .trade-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 12px 15px;
+      border-radius: 10px;
+      border-left: 3px solid #38bdf8;
+      margin-bottom: 10px;
+    }
 
-        .status-indicator {
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #94a3b8;
-        }
+    .trade-info, .trade-details { display: flex; flex-direction: column; gap: 5px; }
+    .trade-details { text-align: right; }
+    .symbol { font-weight: 600; font-size: 0.95rem; }
+    .price { font-weight: 600; color: #f8fafc; font-size: 0.95rem; }
+    .time { font-size: 0.8rem; color: #94a3b8; }
+    
+    .type {
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      display: inline-block;
+      width: fit-content;
+    }
+    .buy { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .sell { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #22c55e;
-            box-shadow: 0 0 10px #22c55e;
-        }
-
-        .assets-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .asset-card {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 12px;
-        }
-
-        .asset-title {
-            font-weight: 500;
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-            color: #e2e8f0;
-        }
-
-        .asset-data {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            margin-bottom: 4px;
-        }
-
-        .highlight {
-            color: #38bdf8;
-            font-weight: 600;
-        }
-
-        .text-green {
-            color: #22c55e;
-        }
-
-        .trades-title {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            color: #e2e8f0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 5px;
-        }
-
-        .trades-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
-        .trade-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 12px 15px;
-            border-radius: 10px;
-            border-left: 3px solid #38bdf8;
-        }
-
-        .trade-info, .trade-details {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .trade-details {
-            text-align: right;
-        }
-
-        .symbol { font-weight: 600; font-size: 0.95rem; }
-        .price { font-weight: 600; color: #f8fafc; font-size: 0.95rem; }
-        .time { font-size: 0.8rem; color: #94a3b8; }
-
-        .type {
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-            display: inline-block;
-            width: fit-content;
-        }
-
-        .buy { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-        .sell { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-
-        .main-btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: #38bdf8;
-            color: #0f172a;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
-        }
-
-        .main-btn:active {
-            transform: scale(0.98);
-        }
-    </style>
+    /* Для мобилок по умолчанию скрываем сайдбар в мини-режим */
+    @media (max-width: 600px) {
+      .panel { width: 70px; }
+      .panel .header h1 { display: none; }
+      .panel .menu-item span { display: none; }
+      .panel .header { justify-content: center; }
+      .panel.open-mobile { width: 260px; position: absolute; }
+      .panel.open-mobile .header h1, .panel.open-mobile .menu-item span { display: block; }
+      .panel.open-mobile .header { justify-content: space-between; }
+    }
+  </style>
 </head>
 <body>
-    <div class="panel">
-        <div class="header">
-            <h2>Bot Panel</h2>
-            <div class="status-indicator">
-                <span class="dot active"></span> В сети
-            </div>
-        </div>
 
-        <div class="assets-container">
-            <!-- Золото -->
-            <div class="asset-card">
-                <div class="asset-title">🏅 XAUUSD (Gold)</div>
-                <div class="asset-data">Текущий тик: <span class="highlight">2645.50</span></div>
-                <div class="asset-data">Статус: <span class="status-text text-green">В работе</span></div>
-            </div>
-
-            <!-- Биткоин -->
-            <div class="asset-card">
-                <div class="asset-title">₿ BTCUSD (Bitcoin)</div>
-                <div class="asset-data">Текущий тик: <span class="highlight">63405.17</span></div>
-                <div class="asset-data">Статус: <span class="status-text text-green">В работе</span></div>
-            </div>
-        </div>
-
-        <h3 class="trades-title">Открытые сделки</h3>
-        <div class="trades-list">
-            <div class="trade-item">
-                <div class="trade-info">
-                    <span class="symbol">XAUUSD</span>
-                    <span class="type buy">BUY</span>
-                </div>
-                <div class="trade-details">
-                    <span class="price">2640.10</span>
-                    <span class="time">17:35:12</span>
-                </div>
-            </div>
-            
-            <div class="trade-item">
-                <div class="trade-info">
-                    <span class="symbol">BTCUSD</span>
-                    <span class="type sell">SELL</span>
-                </div>
-                <div class="trade-details">
-                    <span class="price">63500.00</span>
-                    <span class="time">17:40:05</span>
-                </div>
-            </div>
-        </div>
-
-        <button class="main-btn" onclick="closeApp()">Закрыть панель</button>
+  <!-- БОКОВОЕ МЕНЮ (Sidebar) -->
+  <div class="panel collapsed" id="panel">
+    <div class="header">
+      <h1>Bot Panel</h1>
+      <button class="toggle-btn" id="toggleBtn">
+        <i class="fa-solid fa-bars" id="toggleIcon"></i>
+      </button>
     </div>
 
-    <script>
-        // Инициализация Telegram Web App
-        let tg = window.Telegram.WebApp;
-        tg.expand(); // Открыть на весь экран
+    <div class="menu">
+      <a class="menu-item active">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Dashboard</span>
+      </a>
+      <a class="menu-item start-btn" onclick="tg.showAlert('Бот запущен!')">
+        <i class="fa-solid fa-play"></i>
+        <span>Запустить бота</span>
+      </a>
+      <a class="menu-item stop-btn" onclick="tg.showAlert('Бот остановлен!')">
+        <i class="fa-solid fa-stop"></i>
+        <span>Остановить бота</span>
+      </a>
+      
+      <div class="divider"></div>
+      
+      <a class="menu-item" onclick="tg.showAlert('Инструкция по смене счета отправлена в чат')">
+        <i class="fa-solid fa-users"></i>
+        <span>Смена счета</span>
+      </a>
+      <a class="menu-item" onclick="tg.close()">
+        <i class="fa-solid fa-xmark"></i>
+        <span>Закрыть панель</span>
+      </a>
+    </div>
+  </div>
 
-        // Устанавливаем цвета окна Telegram под темный дизайн
-        tg.setHeaderColor('#0f172a');
-        tg.setBackgroundColor('#0f172a');
+  <!-- ОСНОВНОЙ ДАШБОРД -->
+  <div class="main-content">
+    <div class="status-bar">
+      <span class="dot"></span> Система онлайн
+    </div>
 
-        function closeApp() {
-            tg.close();
-        }
-    </script>
+    <!-- Карточки активов -->
+    <div class="asset-card">
+      <div class="asset-title"><i class="fa-solid fa-coins" style="color: #fbbf24;"></i> XAUUSD (Gold)</div>
+      <div class="asset-data">Текущий тик: <span class="highlight">2645.50</span></div>
+      <div class="asset-data">Статус: <span class="text-green">В работе</span></div>
+    </div>
+
+    <div class="asset-card">
+      <div class="asset-title"><i class="fa-brands fa-bitcoin" style="color: #f7931a;"></i> BTCUSD (Bitcoin)</div>
+      <div class="asset-data">Текущий тик: <span class="highlight">63405.17</span></div>
+      <div class="asset-data">Статус: <span class="text-green">В работе</span></div>
+    </div>
+
+    <!-- Таблица сделок -->
+    <h3 class="trades-title">Открытые сделки</h3>
+    
+    <div class="trade-item">
+      <div class="trade-info">
+        <span class="symbol">XAUUSD</span>
+        <span class="type buy">BUY</span>
+      </div>
+      <div class="trade-details">
+        <span class="price">2640.10</span>
+        <span class="time">17:35:12</span>
+      </div>
+    </div>
+    
+    <div class="trade-item">
+      <div class="trade-info">
+        <span class="symbol">BTCUSD</span>
+        <span class="type sell">SELL</span>
+      </div>
+      <div class="trade-details">
+        <span class="price">63500.00</span>
+        <span class="time">17:40:05</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- СКРИПТЫ ВЗАИМОДЕЙСТВИЯ -->
+  <script>
+    // 1. Настройка Telegram Web App
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.setHeaderColor('#000000');
+    tg.setBackgroundColor('#000000');
+
+    // 2. Логика вашего Sidebar'а (Сворачивание/Разворачивание)
+    const panel = document.getElementById('panel');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const toggleIcon = document.getElementById('toggleIcon');
+
+    toggleBtn.addEventListener('click', () => {
+      // Для мобилок используем спец. класс
+      if (window.innerWidth <= 600) {
+        panel.classList.toggle('open-mobile');
+        panel.classList.remove('collapsed');
+      } else {
+        panel.classList.toggle('collapsed');
+      }
+      
+      // Смена иконки
+      if (panel.classList.contains('collapsed') && window.innerWidth > 600) {
+        toggleIcon.className = 'fa-solid fa-bars';
+      } else if (!panel.classList.contains('open-mobile') && window.innerWidth <= 600) {
+        toggleIcon.className = 'fa-solid fa-bars';
+      } else {
+        toggleIcon.className = 'fa-solid fa-xmark';
+      }
+    });
+
+    // На старте для мобилок ставим иконку гамбургера
+    if (window.innerWidth <= 600) {
+      toggleIcon.className = 'fa-solid fa-bars';
+    }
+  </script>
 </body>
 </html>
