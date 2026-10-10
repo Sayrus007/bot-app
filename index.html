@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="panel">
+        <div class="header">
+            <h2>Bot Panel</h2>
+            <div class="status-indicator">
+                <span class="dot active"></span> В сети
+            </div>
+        </div>
+
+        <div class="assets-container">
+            <!-- Золото -->
+            <div class="asset-card">
+                <div class="asset-title">🏅 XAUUSD (Gold)</div>
+                <div class="asset-data">Тик: <span class="highlight">2645.50</span></div>
+                <div class="asset-data">Статус: <span class="status-text text-green">В работе</span></div>
+            </div>
+
+            <!-- Биткоин -->
+            <div class="asset-card">
+                <div class="asset-title">₿ BTCUSD (Bitcoin)</div>
+                <div class="asset-data">Тик: <span class="highlight">63405.17</span></div>
+                <div class="asset-data">Статус: <span class="status-text text-green">В работе</span></div>
+            </div>
+        </div>
+
+        <h3 class="trades-title">Открытые сделки</h3>
+        <div class="trades-list">
+            <div class="trade-item">
+                <div class="trade-info">
+                    <span class="symbol">XAUUSD</span>
+                    <span class="type buy">BUY</span>
+                </div>
+                <div class="trade-details">
+                    <span class="price">2640.10</span>
+                    <span class="time">17:35:12</span>
+                </div>
+            </div>
+            
+            <div class="trade-item">
+                <div class="trade-info">
+                    <span class="symbol">BTCUSD</span>
+                    <span class="type sell">SELL</span>
+                </div>
+                <div class="trade-details">
+                    <span class="price">63500.00</span>
+                    <span class="time">17:40:05</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="main-btn" onclick="closeApp()">Закрыть панель</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
