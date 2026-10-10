@@ -3,215 +3,282 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AiTradingBot Panel</title>
+  <title>AiTradingBot MT5</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-    body { min-height: 100vh; display: flex; background: #000; color: #fff; overflow-x: hidden; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
+    body { background: #000; color: #fff; overflow-x: hidden; padding-bottom: 60px; -webkit-tap-highlight-color: transparent; }
 
-    /* Панель меню */
-    .panel { width: 260px; height: 100vh; padding: 20px 15px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(30px); border-right: 1px solid rgba(255, 255, 255, 0.1); transition: 0.4s ease; display: flex; flex-direction: column; flex-shrink: 0; z-index: 100; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
-    .header h1 { font-size: 1.2rem; font-weight: 600; color: #38bdf8; }
-    .toggle-btn { width: 40px; height: 40px; border: 0; border-radius: 50%; color: #fff; background: transparent; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-    .menu { display: flex; flex-direction: column; gap: 5px; }
-    .menu-item { display: flex; align-items: center; gap: 16px; padding: 13px 15px; border-radius: 12px; color: rgba(255, 255, 255, 0.8); font-size: 0.95rem; cursor: pointer; }
-    .menu-item:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
-    .menu-item i { font-size: 1.1rem; min-width: 20px; text-align: center; }
-    .start-btn { color: #4ade80; } .stop-btn { color: #f87171; }
-    .divider { height: 1px; margin: 10px 0; background: rgba(255, 255, 255, 0.1); }
+    /* Навигация (Нижнее меню) */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background: #000; border-top: 1px solid #1c1c1e; display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8e8e93; font-size: 10px; cursor: pointer; width: 33%; gap: 4px; transition: color 0.2s; }
+    .nav-item i { font-size: 20px; }
+    .nav-item.active { color: #0a84ff; }
+
+    /* Контейнеры вкладок */
+    .view-section { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
+    .view-section.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Общие элементы MT5 */
+    .top-header { text-align: center; font-size: 24px; font-weight: 500; margin-bottom: 15px; transition: color 0.3s; }
+    .text-red { color: #ff3b30; }
+    .text-blue { color: #0a84ff; }
+    .text-gray { color: #8e8e93; }
+
+    .acc-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+    .acc-label { color: #fff; font-weight: 500; }
+    .acc-value { font-weight: 500; }
     
-    .panel.collapsed { width: 70px; }
-    .panel.collapsed .header h1, .panel.collapsed .menu-item span { display: none; }
-    .mobile-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 50; }
-
-    /* Дашборд */
-    .main-content { flex-grow: 1; padding: 20px; height: 100vh; overflow-y: auto; background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent 40%); }
-    .status-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 0.9rem; color: #94a3b8; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 10px #22c55e; }
-    .asset-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-    .asset-title { font-weight: 500; font-size: 1.1rem; margin-bottom: 8px; display: flex; gap: 10px; }
-    .asset-data { font-size: 0.9rem; color: #94a3b8; margin-bottom: 4px; }
-    .highlight { color: #38bdf8; font-weight: 600; font-size: 1.1rem; }
+    .section-title { background: #1c1c1e; padding: 5px 15px; margin: 15px -15px; font-size: 12px; color: #8e8e93; display: flex; justify-content: space-between; align-items: center; }
     
-    .trades-title { font-size: 1.2rem; margin: 25px 0 15px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px; }
-    .trade-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.03); padding: 12px 15px; border-radius: 10px; border-left: 3px solid #38bdf8; margin-bottom: 10px; }
-    .trade-info, .trade-details { display: flex; flex-direction: column; gap: 5px; }
-    .trade-details { text-align: right; }
-    .symbol { font-weight: 600; font-size: 0.95rem; }
-    .time { font-size: 0.8rem; color: #94a3b8; }
-    .type { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; width: fit-content; }
-    .buy { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-    .sell { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-    .closed { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+    /* Списки сделок */
+    .trade-card { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1c1c1e; }
+    .trade-left { display: flex; flex-direction: column; gap: 4px; }
+    .trade-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .trade-symbol { font-weight: 700; font-size: 15px; }
+    .trade-type { font-size: 13px; font-weight: 500; }
+    .trade-prices { font-size: 13px; color: #8e8e93; }
+    .trade-profit { font-size: 16px; font-weight: 500; }
+    .trade-time { font-size: 12px; color: #8e8e93; }
 
-    .mobile-menu-btn { display: none; position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: #38bdf8; color: #000; border: none; font-size: 20px; z-index: 90; }
-
-    @media (max-width: 600px) {
-      .panel { position: fixed; width: 260px; transform: translateX(-100%); }
-      .panel.open-mobile { transform: translateX(0); }
-      .mobile-menu-btn { display: block; }
-      .mobile-overlay.active { display: block; }
-    }
+    /* Карточки на главном экране */
+    .bot-controls { display: flex; gap: 10px; margin-bottom: 20px; }
+    .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; transition: transform 0.1s; }
+    .btn:active { transform: scale(0.95); }
+    .btn-start { background: rgba(52, 199, 89, 0.2); color: #34c759; }
+    .btn-stop { background: rgba(255, 59, 48, 0.2); color: #ff3b30; }
+    
+    .asset-box { background: #1c1c1e; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .asset-info { display: flex; flex-direction: column; }
+    .asset-name { font-weight: 700; font-size: 16px; margin-bottom: 5px; }
+    .asset-price { font-size: 24px; font-weight: 500; }
   </style>
 </head>
 <body>
 
-  <div class="mobile-overlay" id="mobileOverlay"></div>
-
-  <div class="panel collapsed" id="panel">
-    <div class="header">
-      <h1>Bot Panel</h1>
-      <button class="toggle-btn" id="toggleBtn"><i class="fa-solid fa-bars" id="toggleIcon"></i></button>
+  <!-- ВКЛАДКА 1: КОТИРОВКИ -->
+  <div id="view-quotes" class="view-section active">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+        <span class="text-gray" id="conn-text">Подключение...</span>
+        <span id="bot-status" class="text-blue">Ожидание</span>
     </div>
-    <div class="menu">
-      <a class="menu-item active" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
-      <a class="menu-item start-btn" onclick="sendCommand('start')"><i class="fa-solid fa-play"></i><span>Запустить бота</span></a>
-      <a class="menu-item stop-btn" onclick="sendCommand('stop')"><i class="fa-solid fa-stop"></i><span>Остановить бота</span></a>
-      <div class="divider"></div>
-      <a class="menu-item" onclick="tg.close()"><i class="fa-solid fa-xmark"></i><span>Закрыть панель</span></a>
+
+    <div class="bot-controls">
+        <button class="btn btn-start" onclick="sendCommand('start')"><i class="fa-solid fa-play"></i> Запуск</button>
+        <button class="btn btn-stop" onclick="sendCommand('stop')"><i class="fa-solid fa-stop"></i> Стоп</button>
+    </div>
+
+    <div class="asset-box">
+        <div class="asset-info">
+            <div class="asset-name">XAUUSDm</div>
+            <div style="font-size: 12px; color: #8e8e93;">Gold vs US Dollar</div>
+        </div>
+        <div class="asset-price text-blue" id="q-xau">0.00</div>
+    </div>
+    
+    <div class="asset-box">
+        <div class="asset-info">
+            <div class="asset-name">BTCUSDm</div>
+            <div style="font-size: 12px; color: #8e8e93;">Bitcoin vs US Dollar</div>
+        </div>
+        <div class="asset-price text-blue" id="q-btc">0.00</div>
+    </div>
+  </div>
+
+  <!-- ВКЛАДКА 2: ТОРГОВЛЯ -->
+  <div id="view-trade" class="view-section">
+    <div class="top-header" id="t-total-profit">0.00 USD</div>
+    
+    <div>
+        <div class="acc-row"><span class="acc-label">Баланс:</span><span class="acc-value" id="t-bal">0.00</span></div>
+        <div class="acc-row"><span class="acc-label">Средства:</span><span class="acc-value" id="t-eq">0.00</span></div>
+        <div class="acc-row"><span class="acc-label">Маржа:</span><span class="acc-value" id="t-mar">0.00</span></div>
+        <div class="acc-row"><span class="acc-label">Свободная маржа:</span><span class="acc-value" id="t-free">0.00</span></div>
+        <div class="acc-row"><span class="acc-label">Уровень маржи (%):</span><span class="acc-value" id="t-lvl">0.00</span></div>
+    </div>
+
+    <div class="section-title"><span>Позиции</span> <i class="fa-solid fa-ellipsis"></i></div>
+    <div id="open-positions-list">
+        <div style="text-align: center; color: #8e8e93; margin-top: 15px; font-size: 14px;">Нет открытых позиций</div>
     </div>
   </div>
 
-  <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></button>
-
-  <div class="main-content">
-    <div class="status-bar"><span class="dot" id="connection-dot"></span> <span id="connection-text">Подключение...</span></div>
-
-    <!-- Графики -->
-    <div class="asset-card">
-      <div class="asset-title"><i class="fa-solid fa-coins" style="color: #fbbf24;"></i> XAUUSD (Gold)</div>
-      <div class="asset-data">Текущий тик: <span class="highlight" id="xau-price">0.00</span></div>
-      <div class="asset-data">Статус: <span class="status-indicator-text">Ожидание...</span></div>
-    </div>
-    <div class="asset-card">
-      <div class="asset-title"><i class="fa-brands fa-bitcoin" style="color: #f7931a;"></i> BTCUSD (Bitcoin)</div>
-      <div class="asset-data">Текущий тик: <span class="highlight" id="btc-price">0.00</span></div>
-      <div class="asset-data">Статус: <span class="status-indicator-text">Ожидание...</span></div>
+  <!-- ВКЛАДКА 3: ИСТОРИЯ -->
+  <div id="view-history" class="view-section">
+    <div class="section-title"><span>Сделки (Сегодня)</span> <i class="fa-regular fa-clock"></i></div>
+    <div id="history-deals-list">
+        <div style="text-align: center; color: #8e8e93; margin-top: 15px; font-size: 14px;">История пуста</div>
     </div>
 
-    <!-- Открытые позиции (Реальное время) -->
-    <h3 class="trades-title">Открытые позиции (Живой PNL)</h3>
-    <div id="open-trades-container">
-        <div style="color: #94a3b8; font-size: 0.9rem;">Нет открытых позиций</div>
-    </div>
-
-    <!-- История сделок -->
-    <h3 class="trades-title">История сделок (Сегодня)</h3>
-    <div id="history-container">
-        <div style="color: #94a3b8; font-size: 0.9rem;">История пуста</div>
+    <div style="margin-top: 20px;">
+        <div class="acc-row"><span class="acc-label">Депозит</span><span class="acc-value" id="h-dep">0.00</span></div>
+        <div class="acc-row"><span class="acc-label">Снятие</span><span class="acc-value" id="h-wit">0.00</span></div>
+        <div class="acc-row"><span class="acc-label">Прибыль</span><span class="acc-value" id="h-prof">0.00</span></div>
+        <div class="acc-row"><span class="acc-label">Своп</span><span class="acc-value" id="h-swap">0.00</span></div>
+        <div class="acc-row"><span class="acc-label">Комиссия</span><span class="acc-value" id="h-com">0.00</span></div>
+        <div class="acc-row"><span class="acc-label">Баланс</span><span class="acc-value" id="h-bal">0.00</span></div>
     </div>
   </div>
+
+  <!-- НИЖНЕЕ МЕНЮ -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchView('quotes', this)"><i class="fa-solid fa-arrow-down-up-across-line"></i>Котировки</div>
+    <div class="nav-item" onclick="switchView('trade', this)"><i class="fa-solid fa-chart-line"></i>Торговля</div>
+    <div class="nav-item" onclick="switchView('history', this)"><i class="fa-solid fa-clock-rotate-left"></i>История</div>
+  </nav>
 
   <script>
     let tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.setHeaderColor('#000000');
-    tg.setBackgroundColor('#000000');
+    tg.expand(); tg.setHeaderColor('#000000'); tg.setBackgroundColor('#000000');
 
-    // UI Логика
-    const panel = document.getElementById('panel'), toggleBtn = document.getElementById('toggleBtn'), toggleIcon = document.getElementById('toggleIcon'), mobileMenuBtn = document.getElementById('mobileMenuBtn'), mobileOverlay = document.getElementById('mobileOverlay');
-    if(toggleBtn) toggleBtn.addEventListener('click', () => { if (window.innerWidth > 600) { panel.classList.toggle('collapsed'); toggleIcon.className = panel.classList.contains('collapsed') ? 'fa-solid fa-bars' : 'fa-solid fa-xmark'; } });
-    if(mobileMenuBtn) mobileMenuBtn.addEventListener('click', () => { panel.classList.add('open-mobile'); mobileOverlay.classList.add('active'); mobileMenuBtn.style.display = 'none'; });
-    function closeMobileMenu() { if (window.innerWidth <= 600) { panel.classList.remove('open-mobile'); mobileOverlay.classList.remove('active'); setTimeout(() => { mobileMenuBtn.style.display = 'block'; }, 400); } }
-    if(mobileOverlay) mobileOverlay.addEventListener('click', closeMobileMenu);
+    // Аудио контекст для звука клика (Инициализируется при первом нажатии)
+    let audioCtx = null;
+
+    function playClickFeedback() {
+        // 1. Тактильная отдача (вибрация Telegram)
+        tg.HapticFeedback.impactOccurred('light');
+
+        // 2. Короткий и приятный звук системного клика (Web Audio API)
+        try {
+            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.05);
+            
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        } catch(e) { console.log("Аудио не поддерживается"); }
+    }
+
+    // Навигация (с воспроизведением звука и вибрации)
+    function switchView(viewId, element) {
+        if (element.classList.contains('active')) return; // Если уже на этой вкладке, ничего не делаем
+        
+        playClickFeedback(); // Звук и вибрация
+        
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('view-' + viewId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+    }
 
     // ==========================================
-    // ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ NGROK (ОБЯЗАТЕЛЬНО С WSS://)
+    // ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ NGROK
     const wsUrl = "wss://esteemed-maturing-juice.ngrok-free.dev/ws";
     // ==========================================
-    
+
     let ws;
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
-        ws.onopen = function() {
-            document.getElementById('connection-text').innerText = "Система онлайн (Подключено)";
-            document.getElementById('connection-dot').style.background = "#22c55e";
-            document.getElementById('connection-dot').style.boxShadow = "0 0 10px #22c55e";
+        ws.onopen = () => { 
+            document.getElementById('conn-text').innerText = "В сети"; 
+            document.getElementById('conn-text').style.color = "#34c759"; 
         };
-
-        ws.onmessage = function(event) {
+        
+        ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
-            // Тики
-            if(document.getElementById('xau-price').innerText !== data.xau_price.toFixed(2)) document.getElementById('xau-price').innerText = data.xau_price.toFixed(2);
-            if(document.getElementById('btc-price').innerText !== data.btc_price.toFixed(2)) document.getElementById('btc-price').innerText = data.btc_price.toFixed(2);
+            // Котировки
+            document.getElementById('q-xau').innerText = data.xau_price.toFixed(3);
+            document.getElementById('q-btc').innerText = data.btc_price.toFixed(3);
             
-            // Статус
-            document.querySelectorAll('.status-indicator-text').forEach(el => {
-                const isActive = data.status === "ВКЛЮЧЕН";
-                el.innerText = isActive ? "В работе" : "Остановлен";
-                el.style.color = isActive ? "#22c55e" : "#f87171";
-            });
+            const isBotActive = data.status === "ВКЛЮЧЕН";
+            document.getElementById('bot-status').innerText = isBotActive ? "Бот работает" : "Бот остановлен";
+            document.getElementById('bot-status').className = isBotActive ? "text-blue" : "text-red";
 
-            // 1. ОТКРЫТЫЕ ПОЗИЦИИ
-            const openTradesContainer = document.getElementById('open-trades-container');
-            if (data.open_trades && data.open_trades.length > 0) {
-                openTradesContainer.innerHTML = '';
-                data.open_trades.forEach(trade => {
-                    const typeClass = trade.type === "BUY" ? "buy" : "sell";
-                    const profitColor = trade.profit >= 0 ? "#4ade80" : "#f87171";
-                    const profitSign = trade.profit > 0 ? "+" : "";
-                    openTradesContainer.innerHTML += `
-                        <div class="trade-item">
-                            <div class="trade-info">
-                                <span class="symbol">${trade.symbol}</span>
-                                <span class="type ${typeClass}">${trade.type}</span>
+            // Торговля (Аккаунт)
+            const p = data.account.profit;
+            const tHead = document.getElementById('t-total-profit');
+            tHead.innerText = (p > 0 ? "+" : "") + p.toFixed(2) + " USD";
+            tHead.className = "top-header " + (p < 0 ? "text-red" : "text-blue");
+            
+            document.getElementById('t-bal').innerText = data.account.balance.toFixed(2);
+            document.getElementById('t-eq').innerText = data.account.equity.toFixed(2);
+            document.getElementById('t-mar').innerText = data.account.margin.toFixed(2);
+            document.getElementById('t-free').innerText = data.account.margin_free.toFixed(2);
+            document.getElementById('t-lvl').innerText = data.account.margin_level.toFixed(2);
+
+            // Открытые позиции
+            const posList = document.getElementById('open-positions-list');
+            if (data.open_trades.length > 0) {
+                posList.innerHTML = '';
+                data.open_trades.forEach(t => {
+                    const pColor = t.profit < 0 ? "text-red" : "text-blue";
+                    posList.innerHTML += `
+                        <div class="trade-card">
+                            <div class="trade-left">
+                                <div><span class="trade-symbol">${t.symbol}</span> <span class="trade-type text-blue">${t.type} ${t.volume}</span></div>
+                                <div class="trade-prices">${t.price_open.toFixed(3)} &rarr; ${t.price_current.toFixed(3)}</div>
                             </div>
-                            <div class="trade-details">
-                                <span style="color: ${profitColor}; font-size: 1.1rem; font-weight: 600;">${profitSign}${trade.profit.toFixed(2)}$</span>
-                                <span class="time">Откр: ${trade.price}</span>
+                            <div class="trade-right">
+                                <span class="trade-profit ${pColor}">${t.profit.toFixed(2)}</span>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
             } else {
-                openTradesContainer.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">Нет открытых позиций</div>';
+                posList.innerHTML = '<div style="text-align: center; color: #8e8e93; margin-top: 15px; font-size: 14px;">Нет открытых позиций</div>';
             }
 
-            // 2. ИСТОРИЯ СДЕЛОК
-            const historyContainer = document.getElementById('history-container');
-            if (data.history_trades && data.history_trades.length > 0) {
-                historyContainer.innerHTML = '';
-                data.history_trades.forEach(trade => {
-                    const profitColor = trade.profit >= 0 ? "#4ade80" : "#f87171";
-                    const profitSign = trade.profit > 0 ? "+" : "";
-                    historyContainer.innerHTML += `
-                        <div class="trade-item" style="border-left: 3px solid #64748b; opacity: 0.8;">
-                            <div class="trade-info">
-                                <span class="symbol">${trade.symbol}</span>
-                                <span class="type closed">Закрыто</span>
+            // История сделок
+            const histList = document.getElementById('history-deals-list');
+            if (data.history_trades.length > 0) {
+                histList.innerHTML = '';
+                data.history_trades.forEach(t => {
+                    const pColor = t.profit < 0 ? "text-red" : "text-blue";
+                    histList.innerHTML += `
+                        <div class="trade-card">
+                            <div class="trade-left">
+                                <div><span class="trade-symbol">${t.symbol}</span> <span class="trade-type text-blue">${t.type} ${t.volume}</span></div>
+                                <div class="trade-prices">${t.price.toFixed(3)}</div>
                             </div>
-                            <div class="trade-details">
-                                <span style="color: ${profitColor}; font-weight: 600;">${profitSign}${trade.profit.toFixed(2)}$</span>
-                                <span class="time">${trade.time}</span>
+                            <div class="trade-right">
+                                <span class="trade-profit ${pColor}">${t.profit.toFixed(2)}</span>
+                                <span class="trade-time">${t.time}</span>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
-            } else {
-                historyContainer.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">История пуста</div>';
             }
+
+            // Сводка истории
+            const s = data.history_summary;
+            document.getElementById('h-dep').innerText = s.deposit.toFixed(2);
+            document.getElementById('h-wit').innerText = s.withdrawal.toFixed(2);
+            document.getElementById('h-prof').innerText = s.profit.toFixed(2);
+            document.getElementById('h-swap').innerText = s.swap.toFixed(2);
+            document.getElementById('h-com').innerText = s.commission.toFixed(2);
+            document.getElementById('h-bal').innerText = data.account.balance.toFixed(2);
         };
 
-        ws.onclose = function() {
-            document.getElementById('connection-text').innerText = "Связь потеряна. Переподключение...";
-            document.getElementById('connection-dot').style.background = "#f87171";
-            setTimeout(connectWebSocket, 3000);
+        ws.onclose = () => { 
+            document.getElementById('conn-text').innerText = "Подключение..."; 
+            document.getElementById('conn-text').style.color = "#8e8e93"; 
+            setTimeout(connectWebSocket, 3000); 
         };
     }
     connectWebSocket();
 
-    function sendCommand(actionName) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ action: actionName }));
-            closeMobileMenu();
-        }
+    // Кнопки Старт/Стоп
+    function sendCommand(cmd) { 
+        playClickFeedback(); // Звук и вибрация при управлении ботом
+        if(ws && ws.readyState === 1) ws.send(JSON.stringify({action: cmd})); 
     }
   </script>
 </body>
